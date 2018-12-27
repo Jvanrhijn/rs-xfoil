@@ -1,6 +1,8 @@
 use std::process::{ChildStdin, Command, Stdio};
 use std::{error, fmt, thread};
+use std::time;
 use std::io::{self, Write, Read, BufReader, BufRead};
+use std::fs::File;
 use std::vec::Vec;
 use std::collections::HashMap;
 
@@ -29,7 +31,7 @@ pub struct XfoilRunner {
     command_valid: bool,
     xfoil_path: String,
     command_sequence: Vec<String>,
-    output: Vec<String>,
+    polar: Option<String>
 }
 
 impl XfoilRunner {
@@ -43,7 +45,7 @@ impl XfoilRunner {
             command_valid: false,
             xfoil_path: path.to_string(),
             command_sequence,
-            output: Vec::<String>::new()
+            polar: None
         }
     }
 
@@ -64,11 +66,17 @@ impl XfoilRunner {
         }
 
         let output = child.wait_with_output().unwrap();
-        for c in output.stdout {
+        /*for c in output.stdout {
             print!("{}", c as char);
-        }
+        }*/
 
-        Ok(HashMap::new())
+        thread::sleep(time::Duration::from_millis(1000));
+
+        if let Some(polar) = &self.polar {
+            Ok(self.parse_polar(polar).unwrap())
+        } else {
+            Ok(HashMap::new())
+        }
 
     }
 
@@ -79,6 +87,7 @@ impl XfoilRunner {
             fname.to_string(),
             "\n".to_string()
         ]);
+        self.polar = Some(fname.to_string());
         self
     }
 
@@ -118,8 +127,23 @@ impl XfoilRunner {
         stdin.write_all(command.as_bytes());
     }
 
-    fn parse_output(&self) {
-
+    fn parse_polar(&self, path: &str) -> std::result::Result<HashMap<String, Vec<f64>>, io::Error> {
+        let mut result = HashMap::new();
+        let table_header = ["CL", "CD", "CDp", "CM", "Top_Xtr", "Bot_Xtr"];
+        for header in &table_header {
+            result.insert(header.to_string(), Vec::<f64>::new());
+        }
+        // number of lines in Xfoil polar header
+        const HEADER: usize = 13;
+        for line in BufReader::new(File::open(path)?).lines().skip(HEADER-1) {
+            let data = line?.split_whitespace()
+                .map(|x| x.parse::<f64>().expect("Failed to parse Xfoil polar"))
+                .collect::<Vec<_>>();
+            for (header, value) in table_header.iter().zip(data) {
+                result.get_mut::<String>(&header.to_string()).unwrap().push(value);
+            }
+        }
+        Ok(result)
     }
 }
 

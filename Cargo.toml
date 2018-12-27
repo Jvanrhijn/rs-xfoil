@@ -5,3 +5,6 @@ authors = ["Jesse van Rhijn <jesse.v.rhijn@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+
+[dev-dependencies]
+rand = "0.6"
