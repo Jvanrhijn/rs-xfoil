@@ -1,8 +1,6 @@
 extern crate rand;
 use rand::{Rng};
 use rand::distributions::Alphanumeric;
-use std::collections::HashMap;
-use std::vec::Vec;
 use rs_xfoil::{XfoilRunner, XfoilError};
 
 fn main() -> Result<(), XfoilError> {

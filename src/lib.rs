@@ -1,13 +1,28 @@
 use std::process::{ChildStdin, Command, Stdio};
-use std::{error, fmt, thread};
-use std::time;
-use std::io::{self, Write, Read, BufReader, BufRead};
+use std::{error, fmt};
+use std::num;
+use std::io::{self, Write, BufReader, BufRead};
 use std::fs::File;
 use std::vec::Vec;
 use std::collections::HashMap;
 
-#[derive(Copy, Clone, Debug)]
-pub struct XfoilError;
+#[derive(Debug)]
+pub enum XfoilError {
+    IoError(io::Error),
+    ParseError(num::ParseFloatError),
+}
+
+impl From<io::Error> for XfoilError {
+    fn from(error: io::Error) -> Self {
+        XfoilError::IoError(error)
+    }
+}
+
+impl From<num::ParseFloatError> for XfoilError {
+    fn from(error: num::ParseFloatError) -> Self {
+        XfoilError::ParseError(error)
+    }
+}
 
 impl fmt::Display for XfoilError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -49,7 +64,7 @@ impl XfoilRunner {
         }
     }
 
-    pub fn dispatch(mut self) -> Result<HashMap<String, Vec<f64>>> {
+    pub fn dispatch(self) -> Result<HashMap<String, Vec<f64>>> {
         let mut child = Command::new(&self.xfoil_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -58,22 +73,21 @@ impl XfoilRunner {
             .ok()
             .expect("Failed to execute Xfoil");
 
-        let mut stdin = child.stdin.as_mut().unwrap();
+        let mut stdin = child.stdin.as_mut().expect("Failed to retrieve handle to child stdin");
 
         for cmd in self.command_sequence.iter() {
-            Self::write_to_xfoil(&mut stdin, &cmd);
-            Self::write_to_xfoil(&mut stdin, "\n");
+            Self::write_to_xfoil(&mut stdin, &cmd)?;
+            Self::write_to_xfoil(&mut stdin, "\n")?;
         }
 
-        let output = child.wait_with_output().unwrap();
+        child.wait()?;
+        //let _ = child.wait_with_output().unwrap();
         /*for c in output.stdout {
             print!("{}", c as char);
         }*/
 
-        thread::sleep(time::Duration::from_millis(1000));
-
         if let Some(polar) = &self.polar {
-            Ok(self.parse_polar(polar).unwrap())
+            self.parse_polar(polar)
         } else {
             Ok(HashMap::new())
         }
@@ -123,11 +137,11 @@ impl XfoilRunner {
         self
     }
 
-    fn write_to_xfoil(stdin: &mut ChildStdin, command: &str) {
-        stdin.write_all(command.as_bytes());
+    fn write_to_xfoil(stdin: &mut ChildStdin, command: &str) -> Result<()> {
+        Ok(stdin.write_all(command.as_bytes())?)
     }
 
-    fn parse_polar(&self, path: &str) -> std::result::Result<HashMap<String, Vec<f64>>, io::Error> {
+    fn parse_polar(&self, path: &str) -> Result<HashMap<String, Vec<f64>>> {
         let mut result = HashMap::new();
         let table_header = ["CL", "CD", "CDp", "CM", "Top_Xtr", "Bot_Xtr"];
         for header in &table_header {
@@ -140,7 +154,9 @@ impl XfoilRunner {
                 .map(|x| x.parse::<f64>().expect("Failed to parse Xfoil polar"))
                 .collect::<Vec<_>>();
             for (header, value) in table_header.iter().zip(data) {
-                result.get_mut::<String>(&header.to_string()).unwrap().push(value);
+                result.get_mut::<String>(&header.to_string())
+                    .expect("Failed to retrieve result HashMap")
+                    .push(value);
             }
         }
         Ok(result)
@@ -152,7 +168,7 @@ mod tests {
     use super::*;
     #[test]
     fn create_runner() {
-        let mut runner = XfoilRunner::new("/usr/local/bin/xfoil");
+        let runner = XfoilRunner::new("/usr/local/bin/xfoil");
         runner.dispatch().unwrap();
     }
 }
