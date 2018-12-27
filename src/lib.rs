@@ -137,13 +137,22 @@ impl XfoilRunner {
         self
     }
 
+    pub fn lift_coefficient(mut self, cl: f64) -> Self {
+        self.command_sequence.extend_from_slice(&[
+            "oper".to_string(),
+            format!("cl {}", cl).to_string(),
+            "\n".to_string()
+        ]);
+        self
+    }
+
     fn write_to_xfoil(stdin: &mut ChildStdin, command: &str) -> Result<()> {
         Ok(stdin.write_all(command.as_bytes())?)
     }
 
     fn parse_polar(&self, path: &str) -> Result<HashMap<String, Vec<f64>>> {
         let mut result = HashMap::new();
-        let table_header = ["CL", "CD", "CDp", "CM", "Top_Xtr", "Bot_Xtr"];
+        let table_header = ["alpha", "CL", "CD", "CDp", "CM", "Top_Xtr", "Bot_Xtr"];
         for header in &table_header {
             result.insert(header.to_string(), Vec::<f64>::new());
         }
