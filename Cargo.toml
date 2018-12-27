@@ -1,0 +1,7 @@
+[package]
+name = "rs-xfoil"
+version = "0.1.0"
+authors = ["Jesse van Rhijn <jesse.v.rhijn@gmail.com>"]
+edition = "2018"
+
+[dependencies]
