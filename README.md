@@ -17,11 +17,13 @@ result of the calculation.
 extern crate rs_xfoil;
 
 fn main() {
-    let result = rs_xfoil::XfoilRunner::new("/usr/local/bin/xfoil")
+    let result = rs_xfoil::Config::new("/usr/local/bin/xfoil")
         .naca("2414")
         .reynolds(100_000)
         .polar_accumulation("test_run")
         .angle_of_attack(4.0)
+        .get_runner()
+        .unwrap()
         .dispatch()
         .unwrap();
     println!("{:?}", result);

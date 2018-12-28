@@ -1,10 +1,10 @@
 extern crate rand;
 use rand::{Rng};
 use rand::distributions::Alphanumeric;
-use rs_xfoil::{XfoilRunner, XfoilError};
+use rs_xfoil::{Config, error::XfoilError};
 
 fn main() -> Result<(), XfoilError> {
-    let result= XfoilRunner::new("/usr/local/bin/xfoil")
+    let result= Config::new("/usr/local/bin/xfoil")
         .naca("2414")
         .reynolds(100_000)
         .polar_accumulation(&format!("/tmp/{}",
@@ -14,6 +14,7 @@ fn main() -> Result<(), XfoilError> {
                .collect::<String>())
         )
         .angle_of_attack(4.0)
+        .get_runner()?
         .dispatch()?;
     println!("{:?}", result);
     Ok(())
