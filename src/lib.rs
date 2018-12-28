@@ -11,6 +11,7 @@ enum Mode {
     Cl(f64)
 }
 
+/// Struct tracking Xfoil configuration.
 pub struct Config {
     mode: Mode,
     reynolds: Option<usize>,
@@ -21,6 +22,8 @@ pub struct Config {
 }
 
 impl Config {
+
+    /// Create new Xfoil configuration structure from the path to an Xfoil executable.
     pub fn new(path: &str) -> Self {
         Self{
             mode: Mode::Angle(0.0),
