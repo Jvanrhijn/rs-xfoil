@@ -260,7 +260,7 @@ mod tests {
         let expect_results = [4.0, 0.7492, 0.0, -0.00131, -0.0633, 0.0, 0.0];
         for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
             let val = results.get(&key.to_string()).unwrap();
-            assert_eq!(val[0], value);
+            assert!((val[0] -value).abs() < 1e-2);
         }
 
     }
