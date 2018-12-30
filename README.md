@@ -1,6 +1,7 @@
 # rs-xfoil
 
 [![Build Status](https://travis-ci.com/Jvanrhijn/rs-xfoil.svg?branch=master)](https://travis-ci.com/Jvanrhijn/rs-xfoil)
+[![codecov](https://codecov.io/gh/Jvanrhijn/rs-xfoil/branch/master/graph/badge.svg)](https://codecov.io/gh/Jvanrhijn/rs-xfoil)
 
 This crate provides a Rust interface to Xfoil, an aerodynamics simulation program written by
 Mark Drela in Fortran. This will allow users to perform calculations using Xfoil, while seamlessly
