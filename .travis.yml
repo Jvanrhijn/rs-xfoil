@@ -17,8 +17,7 @@ before_script: |
   mkdir build &&
   cd build &&
   cmake .. &&
-  sudo make -j install &&
-  cd ..
+  sudo make -j install
 
 script:
   - cargo test
@@ -36,6 +35,7 @@ addons:
       - libiberty-dev
 
 after_success: |
+  cd $TRAVIS_BUILD_DIR &&
   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
   tar xzf master.tar.gz &&
   cd kcov-master &&
@@ -44,7 +44,8 @@ after_success: |
   cmake .. &&
   make -j &&
   make install DESTDIR=../../kcov-build &&
-  cd ../.. &&
+  cd $TRAVIS_BUILD_DIR &&
+  pwd &&
   rm -rf kcov-master &&
   for file in $(find target/debug -maxdepth 1 -executable | grep '-'); do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash) &&
