@@ -265,4 +265,20 @@ mod tests {
 
     }
 
+    #[test]
+    fn create_polar_file() {
+        use std::path::Path;
+        use std::fs::remove_file;
+        let file = "xfoil_create_polar_file_test";
+        let _ = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .pacc_from_str(file)
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        assert!(Path::new(file).exists());
+        remove_file(Path::new(file)).unwrap();
+    }
+
 }
