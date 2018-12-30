@@ -239,12 +239,16 @@ mod tests {
 
     #[test]
     fn convergence_error() {
-        let _ = Config::new("/usr/local/bin/xfoil")
+        let result = Config::new("/usr/local/bin/xfoil")
             .naca("2414")
             .reynolds(1)
             .get_runner()
             .unwrap()
             .dispatch();
+        match result {
+            Ok(_) => panic!("Convergence error test did not return Err"),
+            Err(_) => assert!(true)
+        };
     }
 
     #[test]
