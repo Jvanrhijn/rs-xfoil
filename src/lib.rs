@@ -249,6 +249,23 @@ mod tests {
     }
 
     #[test]
+    fn load_airfoil_dat() {
+        let results = Config::new("/usr/local/bin/xfoil")
+            .airfoil_polar_file("examples/clarky.dat")
+            .angle_of_attack(4.0)
+            .pacc_random()
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        let expect_results = [4.000, 0.8965, 0.00000, -0.00118, -0.0942, 0.0000, 0.0000];
+        for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
+            let val = results.get(&key.to_string()).unwrap();
+            assert!((val[0] -value).abs() < 1e-2);
+        }
+    }
+
+    #[test]
     fn aoa_inertial_success() {
         let results = Config::new("/usr/local/bin/xfoil")
             .naca("2414")
