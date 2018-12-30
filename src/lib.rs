@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_inertial_successfully() {
+    fn aoa_inertial_success() {
         let results = Config::new("/usr/local/bin/xfoil")
             .naca("2414")
             .angle_of_attack(4.0)
@@ -266,6 +266,59 @@ mod tests {
     }
 
     #[test]
+    fn cl_inertial_success() {
+        let results = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .lift_coefficient(1.0)
+            .pacc_random()
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        let expect_results = [6.059, 1.0000, 0.00000, -0.00133, -0.0671, 0.0000, 0.0000];
+        for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
+            let val = results.get(&key.to_string()).unwrap();
+            assert!((val[0] -value).abs() < 1e-2);
+        }
+    }
+
+    #[test]
+    fn aoa_viscous_success() {
+        let results = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .angle_of_attack(4.0)
+            .reynolds(100_000)
+            .pacc_random()
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        let expect_results =  [4.000, 0.7278, 0.01780, 0.00982, -0.0614, 0.6233, 1.0000];
+        for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
+            let val = results.get(&key.to_string()).unwrap();
+            assert!((val[0] -value).abs() < 1e-2);
+        }
+    }
+
+    #[test]
+    fn cl_viscous_success() {
+        let results = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .lift_coefficient(1.0)
+            .reynolds(100_000)
+            .pacc_random()
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        let expect_results =   [7.121, 1.0000, 0.02106, 0.01277, -0.0443, 0.4234, 1.0000];
+        for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
+            let val = results.get(&key.to_string()).unwrap();
+            assert!((val[0] -value).abs() < 1e-2);
+        }
+    }
+
+    #[test ]
     fn create_polar_file() {
         use std::path::Path;
         use std::fs::remove_file;
