@@ -25,7 +25,7 @@ fn main() {
     let result = rs_xfoil::Config::new("/usr/local/bin/xfoil")
         .naca("2414")
         .reynolds(100_000)
-        .polar_accumulation("test_run")
+        .pacc_from_string("test_run")
         .angle_of_attack(4.0)
         .get_runner()
         .unwrap()
