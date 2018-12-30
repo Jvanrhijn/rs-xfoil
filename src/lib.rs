@@ -245,10 +245,7 @@ mod tests {
             .get_runner()
             .unwrap()
             .dispatch();
-        match result {
-            Ok(_) => panic!("Convergence error test did not return Err"),
-            Err(_) => assert!(true)
-        };
+        assert!(result.is_err(), "Convergence error test did not return Err");
     }
 
     #[test]
