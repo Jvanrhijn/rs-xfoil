@@ -262,7 +262,6 @@ mod tests {
             let val = results.get(&key.to_string()).unwrap();
             assert!((val[0] -value).abs() < 1e-2);
         }
-
     }
 
     #[test]

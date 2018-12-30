@@ -17,7 +17,7 @@ before_script: |
   mkdir build &&
   cd build &&
   cmake .. &&
-  sudo make install
+  sudo make -j install
 
 script:
   - cargo test
@@ -41,7 +41,7 @@ after_success: |
   mkdir build &&
   cd build &&
   cmake .. &&
-  make &&
+  make -j &&
   make install DESTDIR=../../kcov-build &&
   cd ../.. &&
   rm -rf kcov-master &&
