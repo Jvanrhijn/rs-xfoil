@@ -1,0 +1,55 @@
+language: rust
+
+matrix:
+  include:
+    - os: linux
+      rust: nightly
+      dist: xenial 
+
+sudo: required
+
+cache:
+  - cargo
+
+before_script:
+  - git clone https://github.com/RobotLocomotion/xfoil.git &&
+  cd xfoil &&
+  mkdir build &&
+  cd build &&
+  cmake .. &&
+  sudo make install
+
+script:
+  - cargo test
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - gfortran
+      - binutils-dev
+      - libiberty-dev
+
+after_success: |
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz &&
+  cd kcov-master &&
+  mkdir build &&
+  cd build &&
+  cmake .. &&
+  make &&
+  make install DESTDIR=../../kcov-build &&
+  cd ../.. &&
+  rm -rf kcov-master &&
+  for file in $(find target/debug -maxdepth 1 -executable | grep '-'); do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  bash <(curl -s https://codecov.io/bash) &&
+  echo "Uploaded code coverage" &&
+  cd $TRAVIS_BUILD_DIR &&
+  rm -rf target &&
+
+env:
+  - RUSTFLAGS="-C link-dead-code"
