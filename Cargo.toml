@@ -7,6 +7,4 @@ license = "MIT"
 description = "Run Xfoil commands from Rust, and retrieve their results."
 
 [dependencies]
-
-[dev-dependencies]
 rand = "0.6"

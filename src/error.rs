@@ -6,6 +6,8 @@ use std::io;
 pub enum XfoilError {
     IoError(io::Error),
     ParseError(num::ParseFloatError),
+    ReadOutputError(std::string::FromUtf8Error),
+    ConvergenceError
 }
 
 impl From<io::Error> for XfoilError {
@@ -17,6 +19,12 @@ impl From<io::Error> for XfoilError {
 impl From<num::ParseFloatError> for XfoilError {
     fn from(error: num::ParseFloatError) -> Self {
         XfoilError::ParseError(error)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for XfoilError {
+    fn from(error: std::string::FromUtf8Error) -> Self {
+        XfoilError::ReadOutputError(error)
     }
 }
 

@@ -1,10 +1,12 @@
+extern crate rand;
+use rand::{Rng};
+use rand::distributions::Alphanumeric;
 use std::process::{ChildStdin, Command, Stdio};
 use std::io::{Write, BufReader, BufRead};
 use std::fs::File;
 use std::vec::Vec;
 use std::collections::HashMap;
 pub mod error;
-//use error::{XfoilError, Result};
 
 enum Mode {
     Angle(f64),
@@ -115,8 +117,16 @@ impl Config {
     }
 
     /// Set path of polar file to save Xfoil data into.
-    pub fn polar_accumulation(mut self, fname: &str) -> Self {
+    pub fn pacc_from_str(mut self, fname: &str) -> Self {
         self.polar = Some(fname.to_string());
+        self
+    }
+
+    pub fn pacc_random(mut self) -> Self {
+        self.polar = Some(format!("/tmp/{}", rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(10)
+            .collect::<String>()));
         self
     }
 
@@ -173,13 +183,12 @@ impl XfoilRunner {
             Self::write_to_xfoil(&mut stdin, "\n")?;
         }
 
-        child.wait()?;
-
-        // TODO: parse output for errors
-        //let _ = child.wait_with_output().unwrap();
-        /*for c in output.stdout {
-            print!("{}", c as char);
-        }*/
+        // If the calculation did not convergence, return ConvergenceError
+        let output = child.wait_with_output().unwrap();
+        if let Some(_) = String::from_utf8(output.stdout)?.as_str().lines()
+            .find(|&line| line == " VISCAL:  Convergence failed") {
+            return Err(error::XfoilError::ConvergenceError);
+        }
 
         if let Some(polar) = &self.polar {
             self.parse_polar(polar)
@@ -218,6 +227,7 @@ impl XfoilRunner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    const POLAR_KEYS: [&str; 7] = ["alpha", "CL", "CD", "CDp", "CM", "Top_Xtr", "Bot_Xtr"];
 
     #[test]
     #[should_panic]
@@ -226,5 +236,36 @@ mod tests {
             .get_runner()
             .unwrap();
     }
-    
+
+    #[test]
+    fn convergence_error() {
+        let _ = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .reynolds(1)
+            .get_runner()
+            .unwrap()
+            .dispatch();
+    }
+
+    #[test]
+    fn complete_inertial_successfully() {
+        let results = Config::new("/usr/local/bin/xfoil")
+            .naca("2414")
+            .angle_of_attack(4.0)
+            .pacc_random()
+            .get_runner()
+            .unwrap()
+            .dispatch()
+            .unwrap();
+        let expect_results = [4.0, 0.7492, 0.0, -0.00131, -0.0633, 0.0, 0.0];
+        for (&key, &value) in POLAR_KEYS.iter().zip(expect_results.iter()) {
+            let val = results.get(&key.to_string()).unwrap();
+            assert_eq!(val[0], value);
+        }
+
+
+
+    }
+
+
 }
